@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <asset:javascript src="application.js"/>
+        <asset:stylesheet src="application.css"/>
         <meta name="layout" content="main" />
         <g:set var="entityName" value="${message(code: 'customer.label', default: 'Customer')}" />
         <title><g:message code="default.list.label" args="[entityName]" /></title>
@@ -11,8 +13,15 @@
             <ul>
                 <li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
                 <li><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></li>
-                <li><a class="button" href="${createLink(uri: '/upload')}"><g:message code="Import from CSV" /></a></li>
                 <li><a class="button" href="${createLink(uri: '/location/index')}"><g:message code="Show all Cusctomers" /></a></li>
+                <li><tr><a class="button" ><g:message code="Import from CSV" />
+
+                <form id="upload-file-form" >
+                    <input id="upload-file-input" type="file" name="filecsv"accept="*" />
+                </form>
+                </a>
+                </tr>
+                </li>
             </ul>
         </div>
         <div id="list-customer" class="content scaffold-list" role="main">
@@ -39,6 +48,34 @@
                     </td>
                 </tr>
             </table>
+
+
+            <script>
+                $(document).ready(function() {
+                    $("#upload-file-input").on("change", uploadFile);
+                });
+
+                function uploadFile() {
+                    $.ajax({
+                        url: "/customer/upload",
+                        type: "POST",
+                        data: new FormData($("#upload-file-form")[0]),
+                        enctype: 'multipart/form-data',
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        success: function () {
+
+                            alert("Customer were successfully imported");
+                            location.reload();
+                        },
+                        error: function () {
+                            alert("Error on uploading users!")
+                        }
+                    });
+                }
+            </script>
+
             <f:table collection="${customerList}" />
 
             <div class="pagination">

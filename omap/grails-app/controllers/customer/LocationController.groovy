@@ -58,17 +58,18 @@ class LocationController {
         @Transactional
         def update(Location location) {
             if (location == null) {
-//            transactionStatus.setRollbackOnly()
+                transactionStatus.setRollbackOnly()
                 notFound()
                 return
             }
 
             if (location.hasErrors()) {
-//            transactionStatus.setRollbackOnly()
+                transactionStatus.setRollbackOnly()
                 respond location.errors, view:'edit'
                 return
             }
 
+            geocoderService.fillInLatLng(location)
             location.save flush:true
 
             request.withFormat {
@@ -84,7 +85,7 @@ class LocationController {
         def delete(Location location) {
 
             if (location == null) {
-//            transactionStatus.setRollbackOnly()
+            transactionStatus.setRollbackOnly()
                 notFound()
                 return
             }

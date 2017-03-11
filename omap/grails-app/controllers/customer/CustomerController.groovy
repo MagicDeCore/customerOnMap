@@ -7,18 +7,30 @@ import grails.transaction.Transactional
 class CustomerController {
 
     def geocoderService
+    def locationService
+
+    def added = 0
+    def edited = 0
+
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
     def index(Integer max) {
+
+        if (added != 0)
+            flash.message = " ${added} new Users were creater"
+        if (edited != 0)
+            flash.message = " ${edited} Users were updated"
+        if (added != 0 && edited != 0)
+            flash.message = "  ${added} new Users were creater, ${edited} Users were updated"
+
+        added = 0
+        edited = 0
+
         if (params.name == null && params.email == null && params.street == null && params.zip == null) {
             params.max = Math.min(max ?: 10, 100)
-//            Customer.list().each { cus ->
-//            println(cus.name+","+cus.email+","+cus.street+","+cus.zip_code +'\n')
-//            }
             respond Customer.list(params), model: [customerCount: Customer.count()]
 
         }else{
-
             params.max = Math.min(params.max ? params.int('max') : 10, 100)
             def customerList = Customer.createCriteria().list(params) {
                 if (params.name) {
@@ -34,22 +46,8 @@ class CustomerController {
                     ilike("zip_code", "%${params.zip}%")
                 }
             }
-
-            println(customerList)
             respond customerList, model: [customerInstanceCount: customerList.totalCount]
         }
-    }
-
-    def index123() {
-        params.max = Math.min(params.max ? params.int('max') : 5, 100)
-
-        def result = Customer.createCriteria().list (params) {
-            if ( params.query ) {
-                ilike("name", "%${params.query}%")
-            }
-        }
-        println("seeeeeaaacrhing" + "%${params.query}%"  )
-        respond ([customerInstanceList: result, customerInstanceTotal: result.totalCount])
     }
 
     def show(Customer customer) {
@@ -74,15 +72,10 @@ class CustomerController {
             return
         }
 
+        customer.save(flush: true)
         if (customer.location == null){
-            findCoordinates(customer)
-        }
-
-        customer.save flush:true
-
-        if (customer.location == null){
-            findCoordinates(customer)
-            customer.save flush:true
+            locationService.setUpLocationForCustomer(customer)
+            customer.save(flush: true)
         }
 
 
@@ -101,7 +94,7 @@ class CustomerController {
 
     @Transactional
     def update(Customer customer) {
-        if (Customer == null) {
+        if (customer == null) {
             transactionStatus.setRollbackOnly()
             notFound()
             return
@@ -112,10 +105,9 @@ class CustomerController {
             respond customer.errors, view:'edit'
             return
         }
-
-        findCoordinates(customer)
         customer.save flush:true
-
+        locationService.setUpLocationForCustomer(customer)
+        customer.save flush: true
 
 
         request.withFormat {
@@ -158,22 +150,53 @@ class CustomerController {
             '*'{ render status: NOT_FOUND }
         }
     }
+    def upload = {
 
-    def findCoordinates(Customer customer){
-        Location location = new Location()
-        location.setStreet(customer.street)
-        location.setCustomer(customer.name)
-        println("-------------------------")
-        println(location.street)
-        println(location.id)
-        println("-------------------------")
-        location.save flush:true, failOnError: true
-        Set<Location> locationSet = new HashSet<Location>()
-        locationSet.add(location)
-        customer.location = locationSet
-        customer.save flush:true, failOnError: true
-        geocoderService.fillInLatLng(location)
+        added = 0
+        edited = 0
+        flash.message = "Uploading customers data"
+        redirect(controller: "customer", action: "index")
+
+        def f = request.getFile('filecsv')
+        if (f.empty) {
+            flash.message = 'file cannot be empty'
+            render(view: 'index')
+            return
+        }
+
+        def webRootDir = servletContext.getRealPath("/")
+        def tmpDir = new File(webRootDir, "/tmp/")
+        tmpDir.mkdirs()
+        f.transferTo(new File(tmpDir, "lastUpload"))
+
+        File splited = new File("${tmpDir}/lastUpload")
+        String[] lines = splited.text.split('\n')
+        List<String[]> rows = lines.collect { it.split(',') }
+        rows.remove(0)
+        rows.each {
+
+            def currentCustomer = customer.Customer.findByEmail(it[1])
+            if (currentCustomer) {
+
+                currentCustomer.name = (it[0])
+                currentCustomer.street = (it[2])
+                currentCustomer.zip_code = (it[3])
+                currentCustomer.save(flush: true, failOnError: true);
+                locationService.setUpLocationForCustomer(currentCustomer)
+                edited++
+
+            } else {
+
+                Customer customerNew = new Customer()
+                customerNew.name = it[0]
+                customerNew.email = it[1]
+                customerNew.street = it[2]
+                customerNew.zip_code = it[3]
+                customerNew.save(flush: true, failOnError: true);
+                locationService.setUpLocationForCustomer(customerNew)
+                added++
+            }
+        }
     }
-
 
 }

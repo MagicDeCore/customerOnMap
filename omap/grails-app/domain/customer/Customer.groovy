@@ -4,6 +4,7 @@ class Customer {
 
     static mapping = {
         version false
+
     }
 
     String name
@@ -13,7 +14,6 @@ class Customer {
 
 
     static hasMany = [location: Location]
-
     static constraints = {
 
         name nullable: true

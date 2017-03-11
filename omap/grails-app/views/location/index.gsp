@@ -50,14 +50,6 @@
             });
             var contentMark;
 
-//        var infowindow = new google.maps.InfoWindow({
-//            content: "asdfasdfasdfasdfasdf"
-//        });
-//
-//        marker.addListener('click', function() {
-//            infowindow.open(map, marker);
-//        })
-
             var markerCluster = new MarkerClusterer(map, markers,
                 {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
         }
