@@ -13,15 +13,20 @@ class LocationService {
     void setUpLocationForCustomer(Customer customer) {
         if (customer.street != null) {
 
-                Location location = new Location()
-                location.setStreet(customer.street)
-                location.setCustomer(customer.name)
-                location.save flush: true, failOnError: true
-                Set<Location> locationSet = new HashSet<Location>()
-                locationSet.add(location)
-                customer.location = locationSet
-                customer.save flush: true, failOnError: true
-                geocoderService.fillInLatLng(location)
+            def oldLocation = Location.findByCustomer(customer.name)
+            Location location = new Location()
+            location.setStreet(customer.street)
+            location.setCustomer(customer.name)
+            location.save flush: true, failOnError: true
+            Set<Location> locationSet = new HashSet<Location>()
+            locationSet.add(location)
+            customer.location = locationSet
+            customer.save flush: true, failOnError: true
+
+            if (oldLocation != null){
+                oldLocation.delete(flush: true)
+            }
+            geocoderService.fillInLatLng(location)
         }
     }
 }
