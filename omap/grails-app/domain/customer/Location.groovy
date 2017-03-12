@@ -4,8 +4,6 @@ class Location {
 
     String street
 
-    Location() {  }
-
     double latitude
     double longitude
     String customer
@@ -16,8 +14,8 @@ class Location {
 
     static constraints = {
         street blank: true
-        latitude min: -90d, max: 90d , nullable: true
-        longitude min: -90d, max: 90d , nullable: true
+        latitude min: -90d, max: 90d, nullable: true
+        longitude min: -90d, max: 90d, nullable: true
         customer blank: true, nullable: true, display: false
     }
 }

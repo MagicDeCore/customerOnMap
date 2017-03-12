@@ -6,7 +6,6 @@ import grails.transaction.Transactional
 @Transactional(readOnly = true)
 class CustomerController {
 
-    def geocoderService
     def locationService
 
     def added = 0
@@ -30,7 +29,7 @@ class CustomerController {
             params.max = Math.min(max ?: 10, 100)
             respond Customer.list(params), model: [customerCount: Customer.count()]
 
-        }else{
+        } else {
             params.max = Math.min(params.max ? params.int('max') : 10, 100)
             def customerList = Customer.createCriteria().list(params) {
                 if (params.name) {
@@ -68,12 +67,12 @@ class CustomerController {
 
         if (customer.hasErrors()) {
             transactionStatus.setRollbackOnly()
-            respond customer.errors, view:'create'
+            respond customer.errors, view: 'create'
             return
         }
 
         customer.save(flush: true)
-        if (customer.location == null){
+        if (customer.location == null) {
             locationService.setUpLocationForCustomer(customer)
             customer.save(flush: true)
         }
@@ -102,10 +101,10 @@ class CustomerController {
 
         if (customer.hasErrors()) {
             transactionStatus.setRollbackOnly()
-            respond customer.errors, view:'edit'
+            respond customer.errors, view: 'edit'
             return
         }
-        customer.save flush:true
+        customer.save flush: true
         locationService.setUpLocationForCustomer(customer)
         customer.save flush: true
 
@@ -115,7 +114,7 @@ class CustomerController {
                 flash.message = message(code: 'default.updated.message', args: [message(code: 'customer.label', default: 'Customer'), customer.id])
                 redirect customer
             }
-            '*'{ respond customer, [status: OK] }
+            '*' { respond customer, [status: OK] }
         }
     }
 
@@ -127,17 +126,14 @@ class CustomerController {
             notFound()
             return
         }
-        def name = customer.name
-        customer.delete flush:true
-        if (Location.findByCustomer(name) != null) {
-            Location.findByCustomer(name).delete(flush: true)
-        }
+        customer.delete flush: true
+
         request.withFormat {
             form multipartForm {
                 flash.message = message(code: 'default.deleted.message', args: [message(code: 'customer.label', default: 'Customer'), customer.id])
-                redirect action:"index", method:"GET"
+                redirect action: "index", method: "GET"
             }
-            '*'{ render status: NO_CONTENT }
+            '*' { render status: NO_CONTENT }
         }
     }
 
@@ -147,7 +143,7 @@ class CustomerController {
                 flash.message = message(code: 'default.not.found.message', args: [message(code: 'customer.label', default: 'Customer'), params.id])
                 redirect action: "index", method: "GET"
             }
-            '*'{ render status: NOT_FOUND }
+            '*' { render status: NOT_FOUND }
         }
     }
     def upload = {

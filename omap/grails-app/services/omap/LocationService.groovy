@@ -23,10 +23,11 @@ class LocationService {
             customer.location = locationSet
             customer.save flush: true, failOnError: true
 
-            if (oldLocation != null){
+            if (oldLocation != null) {
                 oldLocation.delete(flush: true)
             }
             geocoderService.fillInLatLng(location)
         }
     }
 }
+
